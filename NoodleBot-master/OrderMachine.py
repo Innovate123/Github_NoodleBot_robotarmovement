@@ -7,6 +7,7 @@ from Noodle import *
 import DefinationType
 
 def reset():
+    #Creation of Menu #
     noodleTypeSelection.set(DefinationType.meePok)
     noodleSizeSelection.set(DefinationType.normal)
     bowlSelection.set(DefinationType.dry)
