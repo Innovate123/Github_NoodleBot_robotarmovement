@@ -1,0 +1,10 @@
+ Program
+   Robot Program
+     MoveJ
+       Waypoint_1
+       Wait: 1.0
+       Waypoint_2
+       Wait: 1.0
+       Waypoint_3
+       Wait: 1.0
+       Waypoint_2

@@ -1,0 +1,15 @@
+ Program
+   Robot Program
+     MoveL
+       RG2(85)
+       Waypoint_1
+       Wait: 0.1
+       Waypoint_2
+       RG2(0)
+       Wait: 0.1
+       Waypoint_3
+       Wait: 0.1
+       Waypoint_4
+       Wait: 0.1
+       Waypoint_5
+       Wait: 0.1

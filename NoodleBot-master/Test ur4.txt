@@ -1,0 +1,22 @@
+ Program
+   Robot Program
+     MoveJ
+       RG2(50)
+       Waypoint_1
+       Wait: 1.0
+       Waypoint_7
+       Waypoint_8
+       RG2(0)
+       Waypoint_6
+       Waypoint_9
+       Waypoint_10
+       Wait: 0.5
+       Waypoint_11
+       Set do_7=On
+       Waypoint_14
+       Waypoint_12
+       RG2(50)
+       Waypoint_13
+       Wait: 1.0
+       Waypoint_1
+       Set do_7=Off

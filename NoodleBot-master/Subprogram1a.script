@@ -1,0 +1,467 @@
+def PythonSubprogram1a():
+  set_standard_analog_input_domain(0, 1)
+  set_standard_analog_input_domain(1, 0)
+  set_tool_analog_input_domain(0, 1)
+  set_tool_analog_input_domain(1, 1)
+  set_analog_outputdomain(0, 0)
+  set_analog_outputdomain(1, 0)
+  set_input_actions_to_default()
+  set_safety_mode_transition_hardness(0)
+  set_gravity([0.0, 0.0, 9.82])
+  set_tool_voltage(24)
+  step_count_0821c7eb_8d90_4c8a_ba38_9c616b10cc8d = 0
+  thread Step_Counter_Thread_ed99dd38_8fff_4dd2_9ff6_8c8240cbac75():
+    while (True):
+      step_count_0821c7eb_8d90_4c8a_ba38_9c616b10cc8d = step_count_0821c7eb_8d90_4c8a_ba38_9c616b10cc8d + 1
+      sync()
+    end
+  end
+  run Step_Counter_Thread_ed99dd38_8fff_4dd2_9ff6_8c8240cbac75()
+  set_tcp(p[0.035,-0.035,0.18,0.0,0.0,0.0])
+  set_payload(0.0)
+  rtde_set_watchdog("speed_slider_mask", 10.0, "ignore")
+  # begin: URCap Installation Node
+  #   Source: RG - On Robot, 1.10.1, OnRobot A/S
+  #   Type: RG Configuration
+  global measure_width=0
+  global grip_detected=False
+  global lost_grip=False
+  global zsysx=0
+  global zsysy=0
+  global zsysz=0.06935
+  global zsysm=0.7415
+  global zmasx=0
+  global zmasy=-0
+  global zmasz=0.18659
+  global zslax=0
+  global zslay=0
+  global zslaz=0
+  global zmasm=0
+  global zslam=0
+  global zslatcp=p[0,0,0,0,0,0]
+  global zmastcp=p[0,0,0.18659,0,-0,-3.14159]
+  thread lost_grip_thread():
+  while True:
+  set_tool_voltage(24)
+  	if True ==get_digital_in(9):
+  		sleep(0.024)
+  		if True == grip_detected:
+  			if False == get_digital_in(8):
+  				grip_detected=False
+  				lost_grip=True
+  			end
+  		end
+  	set_tool_analog_input_domain(0, 1)
+  	set_tool_analog_input_domain(1, 1)
+  	zscale = (get_analog_in(2)-0.026)/2.9760034
+  	zangle = zscale*1.57079633+-0.08726646
+  	zwidth = 5.0+110*sin(zangle)
+  	global measure_width = (floor(zwidth*10))/10-9.2
+  	end
+  	sync()
+  end
+  end
+  lg_thr = run lost_grip_thread()
+  def RG2(target_width=110, target_force=40, payload=0.0, set_payload=False, depth_compensation=False, slave=False):
+  	set_tcp(p[0,0,0.18659,0,-0,-3.14159])
+  	grip_detected=False
+  	if slave:
+  		slave_grip_detected=False
+  	else:
+  		master_grip_detected=False
+  	end
+  	timeout = 0
+  	timeout_limit = 750000
+  	while get_digital_in(9) == False:
+  	  if timeout > timeout_limit:
+  	    break
+  	  end
+  	  timeout = timeout+1
+  	  sync()
+  	end
+  	def bit(input):
+  	  msb=65536
+  	  local i=0
+  	  local output=0
+  	  while i<17:
+  	    set_digital_out(8,True)
+  	    if input>=msb:
+  	      input=input-msb
+  	      set_digital_out(9,False)
+  	    else:
+  	      set_digital_out(9,True)
+  	    end
+  	    if get_digital_in(8):
+  	      out=1
+  	    end
+  	    sync()
+  	    set_digital_out(8,False)
+  	    sync()
+  	    input=input*2
+  	    output=output*2
+  	    i=i+1
+  	  end
+  	  return output
+  	end
+  	target_width=target_width+9.2
+  	if target_force>40:
+  	target_force=40
+  	end
+  	if target_force<3:
+  	target_force=3
+  	end
+  	if target_width>110:
+  	target_width=110
+  	end
+  	if target_width<0:
+  	target_width=0
+  	end
+  	rg_data=floor(target_width)*4
+  	rg_data=rg_data+floor(target_force/2)*4*111
+  	rg_data=rg_data+32768
+  	if slave:
+  	rg_data=rg_data+16384
+  	end
+  	bit(rg_data)
+  	if slave==False:
+  	t_w_rg=pose_trans(get_actual_tool_flange_pose(), zmastcp)
+  	end
+  	if slave:
+  	t_w_rg=pose_trans(get_actual_tool_flange_pose(), zslatcp)
+  	end
+  	t_rg_w=pose_inv(t_w_rg)
+  	if depth_compensation:
+  	finger_length = 55.0/1000
+  	finger_heigth_disp = 5.0/1000
+  	center_displacement = 7.5/1000
+  
+  	start_pose = get_forward_kin()
+  	set_analog_inputrange(2, 1)
+  	zscale = (get_analog_in(2)-0.026)/2.9760034
+  	zangle = zscale*1.57079633+-0.08726646
+  	zwidth = 5.0+110*sin(zangle)
+  
+  	start_depth = cos(zangle)*finger_length
+  
+  	sleep(0.016)
+  	timeout = 0
+  	while get_digital_in(9) == True:
+  	  timeout=timeout+1
+  	  sleep(0.008)
+  	  if timeout > 20:
+  	    break
+  	  end
+  	end
+  	timeout = 0
+  	timeout_limit = 750000
+  	compensation_depth = 0
+  	while get_digital_in(9) == False:
+  	  zscale = (get_analog_in(2)-0.026)/2.9760034
+  	  zangle = zscale*1.57079633+-0.08726646
+  	  zwidth = 5.0+110*sin(zangle)
+  	  measure_depth = cos(zangle)*finger_length
+  	  compensation_depth = (measure_depth - start_depth)
+  	  target_pose =pose_add(start_pose,pose_trans(pose_trans(t_w_rg, p[0,0,-compensation_depth,0,0,0]),t_rg_w))
+  
+  	  if timeout > timeout_limit:
+  	    break
+  	  end
+  	  timeout=timeout+1
+  	#  servoj(get_inverse_kin(target_pose), t=0.008, lookahead_time=0.033, gain=1500)
+  	#  textmsg(point_dist(target_pose, get_forward_kin()))
+  	#end
+  	#textmsg("end gripper move!!!!!")
+  	#nspeedthr = 0.001
+  	#nspeed = norm(get_actual_tcp_speed())
+  	#while nspeed > nspeedthr:
+  	#  servoj(get_inverse_kin(target_pose), t=0.008, lookahead_time=0.033, gain=1500)
+  	#  nspeed = norm(get_actual_tcp_speed())
+  	#  textmsg(point_dist(target_pose, get_forward_kin()))
+  	#end
+  	servoj(get_inverse_kin(target_pose),0,0,0.008,0.01,2000)
+  	if point_dist(target_pose, get_forward_kin()) > 0.005:
+  	popup("Lower grasping force or max width",title="RG-lag threshold exceeded", warning=False, error=False, blocking=False)
+  	end
+  	end
+  	act_comp_pose = p[0,0,0,0,0,0]
+  	while norm(act_comp_pose) < norm(compensation_depth)-0.0002:
+  	servoj(get_inverse_kin(target_pose),0,0,0.008,0.01,2000)
+  	act_comp_pose = pose_trans(pose_inv(start_pose),get_forward_kin())
+  	end
+  	stopj(2)
+  	end
+  	if depth_compensation==False:
+  	timeout = 0
+  	timeout_count=20*0.008/0.008
+  	while get_digital_in(9) == True:
+  	  timeout = timeout+1
+  	  sync()
+  	  if timeout > timeout_count:
+  	    break
+  	  end
+  	end
+  	timeout = 0
+  	timeout_limit = 750000
+  	while get_digital_in(9) == False:
+  	  timeout = timeout+1
+  	  sync()
+  	  if timeout > timeout_limit:
+  	    break
+  	  end
+  	end
+  	end
+  	sleep(0.024)
+  	if set_payload:
+  	if slave:
+  	if get_analog_in(3)/0.5952007 < 1.42:
+  	zslam=0
+  	else:
+  	zslam=payload
+  	end
+  	else:
+  	if get_digital_in(8) == False:
+  	zmasm=0
+  	else:
+  	zmasm=payload
+  	end
+  	end
+  	zload=zmasm+zslam+zsysm
+  	set_payload(zload,[(zsysx*zsysm+zmasx*zmasm+zslax*zslam)/zload,(zsysy*zsysm+zmasy*zmasm+zslay*zslam)/zload,(zsysz*zsysm+zmasz*zmasm+zslaz*zslam)/zload])
+  	end
+  	master_grip_detected=False
+  	master_lost_grip=False
+  	slave_grip_detected=False
+  	slave_lost_grip=False
+  	if True == get_digital_in(8):
+  		master_grip_detected=True
+  	end
+  	if get_analog_in(3)/0.5952007>1.97:
+  		slave_grip_detected=True
+  	end
+  	grip_detected=False
+  	lost_grip=False
+  	if True == get_digital_in(8):
+  		grip_detected=True
+  	end
+  	zscale = (get_analog_in(2)-0.026)/2.9760034
+  	zangle = zscale*1.57079633+-0.08726646
+  	zwidth = 5.0+110*sin(zangle)
+  	global measure_width = (floor(zwidth*10))/10-9.2
+  	if slave:
+  	slave_measure_width=measure_width
+  	else:
+  	master_measure_width=measure_width
+  	end
+  	return grip_detected
+  end
+  set_tool_voltage(24)
+  set_tcp(p[0,0,0.18659,0,-0,-3.14159])
+  # end: URCap Installation Node
+  # Test ur4
+  def Test_ur4():
+    $ 39 "Test ur4" "noBreak"
+    $ 40 "MoveJ"
+    # begin: URCap Program Node
+    #   Source: RG - On Robot, 1.10.1, OnRobot A/S
+    #   Type: RG2
+    $ 41 "RG2(50)"
+    RG2(50,40,0.0,True,False,False)
+    # end: URCap Program Node
+    $ 42 "Waypoint_1" "breakAfter"
+    movej(get_inverse_kin(p[.092938561274, -.353096816926, .462595264904, 1.169187776176, -1.240793336641, 1.170914400796], qnear=[1.5453579425811768, -2.3914130369769495, 2.4199042320251465, 3.116952419281006, 4.683440208435059, 1.570770502090454]), a=1.5707963267948966, v=2.0943951023931953)
+    $ 43 "Wait: 1.0"
+    sleep(1.0)
+    $ 44 "Waypoint_6" "breakAfter"
+    movej(get_inverse_kin(p[.146589860681, -.199362132880, .090109998567, -2.576041593270, .070891055351, 1.786028389779], qnear=[2.411975622177124, -1.3784330526935022, 2.0275416374206543, 5.18257999420166, 4.063758850097656, 1.3120936155319214]), a=1.5707963267948966, v=2.0943951023931953)
+    $ 45 "Wait: 1.0"
+    sleep(1.0)
+    $ 46 "Waypoint_7" "breakAfter"
+    movej(get_inverse_kin(p[.085123919499, -.191998676560, .040974653734, -2.227139644340, -.060235514101, 2.180254409945], qnear=[2.37099027633667, -1.1393664518939417, 2.159198760986328, 5.237435340881348, 3.928500175476074, 1.510810136795044]), a=1.5707963267948966, v=2.0943951023931953)
+    # begin: URCap Program Node
+    #   Source: RG - On Robot, 1.10.1, OnRobot A/S
+    #   Type: RG2
+    $ 47 "RG2(0)"
+    RG2(0,40,0.0,True,False,False)
+    # end: URCap Program Node
+    $ 48 "Wait: 1.0"
+    sleep(1.0)
+    $ 49 "Waypoint_8" "breakAfter"
+    movej(get_inverse_kin(p[.275795889874, -.372440318909, .214651572678, 1.426633326087, .952036407645, -1.409301869197], qnear=[2.529920769946429, -1.5238644418167233, 2.1119837279717437, 5.532862080042061, 2.842740265275739, 1.4892630442466883]), a=1.5707963267948966, v=2.0943951023931953)
+    $ 50 "Wait: 1.0"
+    sleep(1.0)
+    $ 51 "Waypoint_9" "breakAfter"
+    movej(get_inverse_kin(p[.245780911089, -.360651225576, .115199486521, 1.063802888779, -1.169395551745, .621509941005], qnear=[2.5303063390196465, -1.3442833507119056, 2.2206435526075685, 5.247845773614305, 2.9633103921320436, 4.2111406486946645]), a=1.5707963267948966, v=2.0943951023931953)
+    $ 52 "Wait: 1.0"
+    sleep(1.0)
+    $ 53 "Waypoint_10" "breakAfter"
+    movej(get_inverse_kin(p[.275795889874, -.372440318909, .214651572678, 1.426633326087, .952036407645, -1.409301869197], qnear=[2.529920769946429, -1.5238644418167233, 2.1119837279717437, 5.532862080042061, 2.842740265275739, 1.4892630442466883]), a=1.5707963267948966, v=2.0943951023931953)
+    $ 54 "Wait: 1.0"
+    sleep(1.0)
+    $ 55 "Waypoint_11" "breakAfter"
+    movej(get_inverse_kin(p[.085123919499, -.191998676560, .040974653734, -2.227139644340, -.060235514101, 2.180254409945], qnear=[2.37099027633667, -1.1393664518939417, 2.159198760986328, 5.237435340881348, 3.928500175476074, 1.510810136795044]), a=1.5707963267948966, v=2.0943951023931953)
+    # begin: URCap Program Node
+    #   Source: RG - On Robot, 1.10.1, OnRobot A/S
+    #   Type: RG2
+    $ 56 "RG2(50)"
+    RG2(50,40,0.0,True,False,False)
+    # end: URCap Program Node
+    $ 57 "Wait: 1.0"
+    sleep(1.0)
+    $ 58 "Waypoint_12" "breakAfter"
+    movej(get_inverse_kin(p[.146589860681, -.199362132880, .090109998567, -2.576041593270, .070891055351, 1.786028389779], qnear=[2.411975622177124, -1.3784330526935022, 2.0275416374206543, 5.18257999420166, 4.063758850097656, 1.3120936155319214]), a=1.5707963267948966, v=2.0943951023931953)
+    $ 59 "Wait: 1.0"
+    sleep(1.0)
+    $ 60 "Waypoint_1" "breakAfter"
+    movej(get_inverse_kin(p[.092938561274, -.353096816926, .462595264904, 1.169187776176, -1.240793336641, 1.170914400796], qnear=[1.5453579425811768, -2.3914130369769495, 2.4199042320251465, 3.116952419281006, 4.683440208435059, 1.570770502090454]), a=1.5707963267948966, v=2.0943951023931953)
+    $ 61 "Wait: 1.0"
+    sleep(1.0)
+  end
+  def Test_ur5c():
+    $ 62 "Test_ur5c" "noBreak"
+    $ 63 "MoveL"
+    $ 64 "Waypoint_5" "breakAfter"
+    movel(p[-.113250855454, -.352969852840, .056401326375, 2.474276899734, -1.083328779750, -.456908114775], a=1.2, v=1.0)
+    $ 65 "Wait: 0.1"
+    sleep(0.1)
+    $ 66 "Waypoint_4" "breakAfter"
+    movel(p[-.110350396857, -.365263356202, .083888695031, 2.408261056423, -1.062717481186, -.407365573496], a=1.2, v=1.0)
+    $ 67 "Wait: 0.1"
+    sleep(0.1)
+    $ 68 "Waypoint_3" "breakAfter"
+    movel(p[.275230298703, -.365243581076, .083857619998, 2.408240585724, -1.062846013313, -.407384482214], a=1.2, v=1.0)
+    $ 69 "Wait: 0.1"
+    sleep(0.1)
+    $ 70 "Waypoint_2" "breakAfter"
+    movel(p[.281568217520, -.356493013793, .057061723406, 2.450866173885, -1.081220952716, -.397286041086], a=1.2, v=1.0)
+    # begin: URCap Program Node
+    #   Source: RG - On Robot, 1.10.1, OnRobot A/S
+    #   Type: RG2
+    $ 71 "RG2(85)"
+    RG2(85,40,0.0,True,False,False)
+    # end: URCap Program Node
+    $ 72 "Wait: 0.1"
+    sleep(0.1)
+    $ 73 "Waypoint_1" "breakAfter"
+    movel(p[.092938561274, -.353096816926, .462595264904, 1.169187776176, -1.240793336641, 1.170914400796], a=1.2, v=1.0)
+    $ 74 "Wait: 0.1"
+    sleep(0.1)
+  end
+  def Test_ur5b():
+    $ 75 "Test_ur5b" "noBreak"
+    $ 76 "MoveL"
+    # begin: URCap Program Node
+    #   Source: RG - On Robot, 1.10.1, OnRobot A/S
+    #   Type: RG2
+    $ 77 "RG2(85)"
+    RG2(85,40,0.0,True,False,False)
+    # end: URCap Program Node
+    $ 78 "Waypoint_1" "breakAfter"
+    movel(p[.092938561274, -.353096816926, .462595264904, 1.169187776176, -1.240793336641, 1.170914400796], a=1.2, v=1.0)
+    $ 79 "Wait: 0.1"
+    sleep(0.1)
+    $ 80 "Waypoint_2" "breakAfter"
+    movel(p[.281568217520, -.356493013793, .057061723406, 2.450866173885, -1.081220952716, -.397286041086], a=1.2, v=1.0)
+    # begin: URCap Program Node
+    #   Source: RG - On Robot, 1.10.1, OnRobot A/S
+    #   Type: RG2
+    $ 81 "RG2(0)"
+    RG2(0,40,0.0,True,False,False)
+    # end: URCap Program Node
+    $ 82 "Wait: 0.1"
+    sleep(0.1)
+    $ 83 "Waypoint_3" "breakAfter"
+    movel(p[.275230298703, -.365243581076, .083857619998, 2.408240585724, -1.062846013313, -.407384482214], a=1.2, v=1.0)
+    $ 84 "Wait: 0.1"
+    sleep(0.1)
+    $ 85 "Waypoint_4" "breakAfter"
+    movel(p[-.110350396857, -.365263356202, .083888695031, 2.408261056423, -1.062717481186, -.407365573496], a=1.2, v=1.0)
+    $ 86 "Wait: 0.1"
+    sleep(0.1)
+    $ 87 "Waypoint_5" "breakAfter"
+    movel(p[-.113250855454, -.352969852840, .056401326375, 2.474276899734, -1.083328779750, -.456908114775], a=1.2, v=1.0)
+    $ 88 "Wait: 0.1"
+    sleep(0.1)
+  end
+  $ 1 "BeforeStart"
+  $ 2 "var_1≔socket_open('192.168.0.100',30000)"
+  global var_1=socket_open("192.168.0.100",30000)
+  while (True):
+    $ 3 "Robot Program"
+    $ 4 "Loop var_1≟ False "
+    while (var_1 ==   False  ):
+      $ 5 "var_1≔socket_open('192.168.0.100',30000)"
+      global var_1=socket_open("192.168.0.100",30000)
+      $ 6 "Wait: 0.5"
+      sleep(0.5)
+    end
+    $ 7 "socket_send_string('asking_for_data')"
+    socket_send_string("asking_for_data")
+    $ 8 "Wait: 0.5"
+    sleep(0.5)
+    $ 9 "var_2≔socket_read_ascii_float(3)"
+    global var_2=socket_read_ascii_float(3)
+    $ 10 "Wait: 0.5"
+    sleep(0.5)
+    $ 11 "var_1≔ False "
+    global var_1=  False  
+    $ 12 "If var_2[1]≟1"
+    if (var_2[1] == 1):
+      $ 13 "Call Test ur4"
+      Test_ur4()
+    end
+    $ 14 "If var_2[1]≟1"
+    if (var_2[1] == 1):
+      $ 15 "Call Test_ur5b"
+      Test_ur5b()
+    end
+    $ 16 "If var_2[2]≟1 and digital_in[0]≟ False "
+    if (var_2[2] == 1  and  get_standard_digital_in(0) ==   False  ):
+      $ 17 "Set do_4=On"
+      set_standard_digital_out(4, True)
+      $ 18 "Wait: 3.0"
+      sleep(3.0)
+      $ 19 "Set do_4=Off"
+      set_standard_digital_out(4, False)
+      $ 20 "Wait: 0.5"
+      sleep(0.5)
+      $ 21 "Set do_5=On"
+      set_standard_digital_out(5, True)
+      $ 22 "Wait: 3.0"
+      sleep(3.0)
+      $ 23 "Set do_5=Off"
+      set_standard_digital_out(5, False)
+      $ 24 "Wait: 0.5"
+      sleep(0.5)
+    end
+    $ 25 "If var_2[3]≟1 and digital_in[0]≟ False "
+    if (var_2[3] == 1  and  get_standard_digital_in(0) ==   False  ):
+      $ 26 "Set do_6=On"
+      set_standard_digital_out(6, True)
+      $ 27 "Wait: 0.5"
+      sleep(0.5)
+      $ 28 "Set do_6=Off"
+      set_standard_digital_out(6, False)
+      $ 29 "Wait: 0.5"
+      sleep(0.5)
+      $ 30 "Set do_7=On"
+      set_standard_digital_out(7, True)
+      $ 31 "Wait: 0.5"
+      sleep(0.5)
+      $ 32 "Set do_7=Off"
+      set_standard_digital_out(7, False)
+      $ 33 "Wait: 0.5"
+      sleep(0.5)
+    end
+    $ 34 "If digital_in[0]≟ False "
+    if (get_standard_digital_in(0) ==   False  ):
+      $ 35 "Call Test_ur5c"
+      Test_ur5c()
+      $ 36 "Wait: 0.5"
+      sleep(0.5)
+      $ 37 "var_1≔ False "
+      global var_1=  False  
+    end
+    $ 38 "socket_close()"
+    socket_close()
+  end
+end

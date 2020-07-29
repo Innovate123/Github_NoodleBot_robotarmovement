@@ -1,0 +1,29 @@
+ Program
+   BeforeStart
+     var_1≔socket_open("192.168.0.100",30000)
+   Robot Program
+     Loop var_1≟ False 
+       var_1≔socket_open("192.168.0.100",30000)
+       Wait: 0.5
+     socket_send_string("asking_for_data")
+     Wait: 0.5
+     var_2≔socket_read_ascii_float(1)
+     Wait: 0.5
+     var_1≔ False 
+     socket_close()
+     If var_2[0]≟1
+       Call Test_ur5a
+   Test_ur5a
+     MoveJ
+       RG2(86)
+       Waypoint_1
+       Wait: 1.0
+       Waypoint_2
+       RG2(0)
+       Wait: 1.0
+       Waypoint_3
+       Wait: 1.0
+       Waypoint_4
+       Waypoint_5
+       RG2(70)
+       Waypoint_1

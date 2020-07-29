@@ -1,0 +1,13 @@
+ Program
+   Robot Program
+     MoveL
+       Waypoint_6
+       MoveJ
+         Waypoint_7
+       MoveJ
+         Waypoint_8
+       MoveJ
+         Waypoint_9
+       RG2(85)
+       MoveJ
+         Waypoint_10

@@ -1,0 +1,89 @@
+ Program
+   BeforeStart
+     var_1≔socket_open("192.168.0.100",30000)
+   Robot Program
+     Loop var_1≟ False 
+       var_1≔socket_open("192.168.0.100",30000)
+       Wait: 0.5
+     socket_send_string("asking_for_data")
+     Wait: 0.5
+     var_2≔socket_read_ascii_float(3)
+     Wait: 0.5
+     var_1≔ False 
+     If var_2[1]≟1
+       Call Test ur4
+     If var_2[1]≟1
+       Call Test_ur5b
+     If var_2[2]≟1 and digital_in[0]≟ False 
+       Set do_4=On
+       Wait: 3.0
+       Set do_4=Off
+       Wait: 0.5
+       Set do_5=On
+       Wait: 3.0
+       Set do_5=Off
+       Wait: 0.5
+     If var_2[3]≟1 and digital_in[0]≟ False 
+       Set do_6=On
+       Wait: 0.5
+       Set do_6=Off
+       Wait: 0.5
+       Set do_7=On
+       Wait: 0.5
+       Set do_7=Off
+       Wait: 0.5
+     If digital_in[0]≟ False 
+       Call Test_ur5c
+       Wait: 0.5
+       var_1≔ False 
+     socket_close()
+   Test ur4
+     MoveJ
+       RG2(50)
+       Waypoint_1
+       Wait: 1.0
+       Waypoint_6
+       Wait: 1.0
+       Waypoint_7
+       RG2(0)
+       Wait: 1.0
+       Waypoint_8
+       Wait: 1.0
+       Waypoint_9
+       Wait: 1.0
+       Waypoint_10
+       Wait: 1.0
+       Waypoint_11
+       RG2(50)
+       Wait: 1.0
+       Waypoint_12
+       Wait: 1.0
+       Waypoint_1
+       Wait: 1.0
+   Test_ur5c
+     MoveL
+       Waypoint_5
+       Wait: 0.1
+       Waypoint_4
+       Wait: 0.1
+       Waypoint_3
+       Wait: 0.1
+       Waypoint_2
+       RG2(85)
+       Wait: 0.1
+       Waypoint_1
+       Wait: 0.1
+   Test_ur5b
+     MoveL
+       RG2(85)
+       Waypoint_1
+       Wait: 0.1
+       Waypoint_2
+       RG2(0)
+       Wait: 0.1
+       Waypoint_3
+       Wait: 0.1
+       Waypoint_4
+       Wait: 0.1
+       Waypoint_5
+       Wait: 0.1
